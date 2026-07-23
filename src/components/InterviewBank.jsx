@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProgress } from '../context/ProgressContext';
 import { DOMAINS } from '../data';
 import { ChevronDown, ChevronUp, Code, Lightbulb, AlertTriangle, Search } from 'lucide-react';
@@ -7,11 +7,34 @@ export const InterviewBank = () => {
   const { activeDomain, setActiveDomain } = useProgress();
   const [expandedId, setExpandedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [interviews, setInterviews] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const currentDomainData = DOMAINS[activeDomain] || DOMAINS.js;
-  const interviewItems = currentDomainData.interviews || [];
 
-  const filteredItems = interviewItems.filter(item => 
+  // Fetch interviews from MongoDB API with static fallback
+  useEffect(() => {
+    setLoading(true);
+    fetch(`http://localhost:5000/api/interviews?domain=${activeDomain}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Backend server is offline');
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.length > 0) {
+          setInterviews(data);
+        } else {
+          setInterviews(currentDomainData.interviews || []);
+        }
+      })
+      .catch(err => {
+        console.warn("Express MongoDB backend offline, utilizing local static files:", err);
+        setInterviews(currentDomainData.interviews || []);
+      })
+      .finally(() => setLoading(false));
+  }, [activeDomain, currentDomainData]);
+
+  const filteredItems = interviews.filter(item => 
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.answer.toLowerCase().includes(searchTerm.toLowerCase())
@@ -79,7 +102,11 @@ export const InterviewBank = () => {
 
       {/* Accordion Questions List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {filteredItems.length > 0 ? (
+        {loading ? (
+          <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            ⏳ Loading Senior Interview Q&As...
+          </div>
+        ) : filteredItems.length > 0 ? (
           filteredItems.map(item => {
             const isExpanded = expandedId === item.id;
             return (

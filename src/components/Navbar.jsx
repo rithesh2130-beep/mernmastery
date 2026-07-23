@@ -9,13 +9,11 @@ import {
   Flame, 
   Award, 
   Moon, 
-  Sun,
-  LogOut,
-  User
+  Sun
 } from 'lucide-react';
 
 export const Navbar = ({ currentView, setCurrentView, onOpenCertificate }) => {
-  const { theme, toggleTheme, streak, getTotalCompletedLevels, logout, user } = useProgress();
+  const { theme, toggleTheme, streak, getTotalCompletedLevels, user } = useProgress();
   const completedCount = getTotalCompletedLevels();
 
   const navItems = [

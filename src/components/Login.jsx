@@ -9,7 +9,7 @@ export const Login = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -23,15 +23,36 @@ export const Login = ({ onLogin }) => {
       return;
     }
 
-    onLogin({
-      email,
-      name: isRegister ? fullName : email.split('@')[0],
-      isGuest: false
-    });
+    try {
+      const endpoint = isRegister ? 'register' : 'login';
+      const body = isRegister 
+        ? { name: fullName, email, password } 
+        : { email, password };
+
+      const response = await fetch(`http://localhost:5000/api/auth/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Authentication failed. Please verify credentials.');
+        return;
+      }
+
+      // Call context login with token and user profile
+      onLogin(data.token, data.user);
+
+    } catch (err) {
+      console.error(err);
+      setError('Cannot connect to authorization server. Make sure the backend is active.');
+    }
   };
 
   const handleGuestMode = () => {
-    onLogin({
+    onLogin('', {
       email: 'guest@example.com',
       name: 'Guest Scholar',
       isGuest: true

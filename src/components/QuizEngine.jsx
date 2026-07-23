@@ -11,8 +11,8 @@ export const QuizEngine = () => {
   const domainData = DOMAINS[activeDomain];
   const currentLevel = activeLevels[activeDomain] || 1;
 
-  // Filter 10 questions corresponding to current level
-  const levelQuestions = domainData ? domainData.questions.filter(q => q.level === currentLevel) : [];
+  const [levelQuestions, setLevelQuestions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({});
@@ -22,15 +22,37 @@ export const QuizEngine = () => {
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
 
-  // Reset state when level or domain changes
+  // Fetch questions from MongoDB API with static fallback
   useEffect(() => {
+    setLoading(true);
+    fetch(`http://localhost:5000/api/questions?domain=${activeDomain}&level=${currentLevel}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Backend server is offline');
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.length > 0) {
+          setLevelQuestions(data);
+        } else {
+          const fallback = domainData ? domainData.questions.filter(q => q.level === currentLevel) : [];
+          setLevelQuestions(fallback);
+        }
+      })
+      .catch(err => {
+        console.warn("Express MongoDB backend offline, utilizing local static files:", err);
+        const fallback = domainData ? domainData.questions.filter(q => q.level === currentLevel) : [];
+        setLevelQuestions(fallback);
+      })
+      .finally(() => setLoading(false));
+
+    // Reset quiz state variables
     setCurrentIndex(0);
     setUserAnswers({});
     setSubmittedQuestions({});
     setIsQuizComplete(false);
     setTimerSeconds(0);
     setIsTimerActive(true);
-  }, [activeDomain, currentLevel]);
+  }, [activeDomain, currentLevel, domainData]);
 
   // Timer tick
   useEffect(() => {
@@ -44,6 +66,14 @@ export const QuizEngine = () => {
     }
     return () => clearInterval(interval);
   }, [isTimerActive, isQuizComplete]);
+
+  if (loading) {
+    return (
+      <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+        ⏳ Loading MERN Database Assessment Tiers...
+      </div>
+    );
+  }
 
   if (!domainData || levelQuestions.length === 0) return null;
 
