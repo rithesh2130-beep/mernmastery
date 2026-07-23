@@ -3,10 +3,12 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import User from './models/User.js';
 import Question from './models/Question.js';
 import Interview from './models/Interview.js';
 import { authMiddleware } from './middleware/auth.js';
+import { sendVerificationEmail } from './services/emailService.js';
 
 dotenv.config();
 
@@ -50,14 +52,24 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
+    // Generate secure email verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
     // Create new user (hook inside model hashes password automatically)
     const newUser = new User({
       name,
       email,
-      passwordHash: password
+      passwordHash: password,
+      isVerified: false,
+      emailVerificationToken: verificationToken,
+      emailVerificationExpires: verificationExpires
     });
 
     await newUser.save();
+
+    // Send verification email in development / production
+    await sendVerificationEmail(newUser.email, verificationToken);
 
     // Sign JWT token
     const token = jwt.sign(
@@ -79,7 +91,8 @@ app.post('/api/auth/register', async (req, res) => {
         profilePic: newUser.profilePic,
         streak: newUser.streak,
         bookmarks: newUser.bookmarks,
-        progress: newUser.progress
+        progress: newUser.progress,
+        isVerified: newUser.isVerified
       }
     });
 
@@ -128,13 +141,76 @@ app.post('/api/auth/login', async (req, res) => {
         profilePic: user.profilePic,
         streak: user.streak,
         bookmarks: user.bookmarks,
-        progress: user.progress
+        progress: user.progress,
+        isVerified: user.isVerified
       }
     });
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error during login.' });
+  }
+});
+
+// GET /api/auth/verify-email
+app.get('/api/auth/verify-email', async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).send('<h1>Verification token is missing.</h1>');
+  }
+
+  try {
+    const user = await User.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).send('<h1>Email verification token is invalid or has expired.</h1><p>Please log in and resend the email link.</p>');
+    }
+
+    user.isVerified = true;
+    user.emailVerificationToken = '';
+    user.emailVerificationExpires = undefined;
+
+    // Finalize pending email change
+    if (user.pendingEmail) {
+      user.email = user.pendingEmail;
+      user.pendingEmail = '';
+    }
+
+    await user.save();
+
+    // Redirect to frontend app workspace with verification success query
+    res.redirect('http://localhost:5183/?verified=true');
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('<h1>Internal server error verifying address.</h1>');
+  }
+});
+
+// POST /api/auth/resend-verification
+app.post('/api/auth/resend-verification', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: 'Student account not found.' });
+    if (user.isVerified) return res.status(400).json({ message: 'Email address is already verified.' });
+
+    // Generate fresh verification token
+    const token = crypto.randomBytes(32).toString('hex');
+    user.emailVerificationToken = token;
+    user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000;
+    await user.save();
+
+    const targetEmail = user.pendingEmail || user.email;
+    await sendVerificationEmail(targetEmail, token);
+
+    res.json({ message: 'Verification email resent successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error resending verification.' });
   }
 });
 
@@ -196,7 +272,8 @@ app.get('/api/users/profile', authMiddleware, async (req, res) => {
       profilePic: user.profilePic,
       streak: user.streak,
       bookmarks: user.bookmarks,
-      progress: user.progress
+      progress: user.progress,
+      isVerified: user.isVerified
     });
   } catch (error) {
     console.error(error);
@@ -214,12 +291,30 @@ app.put('/api/users/profile', authMiddleware, async (req, res) => {
 
     // Update details
     if (name) user.name = name;
-    if (email) user.email = email;
     if (targetGoal) user.targetGoal = targetGoal;
     if (affiliation) user.affiliation = affiliation;
     if (avatarColor) user.avatarColor = avatarColor;
     if (bio !== undefined) user.bio = bio;
     if (profilePic !== undefined) user.profilePic = profilePic;
+
+    // Secure Email Swap Verification Logic
+    let emailChanged = false;
+    if (email && email.toLowerCase() !== user.email.toLowerCase()) {
+      const conflict = await User.findOne({ email: email.toLowerCase() });
+      if (conflict) {
+        return res.status(400).json({ message: 'Email address already in use.' });
+      }
+
+      user.pendingEmail = email.toLowerCase();
+      user.isVerified = false;
+
+      const token = crypto.randomBytes(32).toString('hex');
+      user.emailVerificationToken = token;
+      user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000;
+
+      await sendVerificationEmail(user.pendingEmail, token);
+      emailChanged = true;
+    }
 
     await user.save();
 
@@ -234,7 +329,9 @@ app.put('/api/users/profile', authMiddleware, async (req, res) => {
       profilePic: user.profilePic,
       streak: user.streak,
       bookmarks: user.bookmarks,
-      progress: user.progress
+      progress: user.progress,
+      isVerified: user.isVerified,
+      emailChanged
     });
 
   } catch (error) {
@@ -271,7 +368,8 @@ app.post('/api/users/sync', authMiddleware, async (req, res) => {
         profilePic: user.profilePic,
         streak: user.streak,
         bookmarks: user.bookmarks,
-        progress: user.progress
+        progress: user.progress,
+        isVerified: user.isVerified
       }
     });
 

@@ -6,6 +6,12 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true },
   passwordHash: { type: String, required: true },
   
+  // Verification states
+  isVerified: { type: Boolean, default: false },
+  emailVerificationToken: { type: String, default: '' },
+  emailVerificationExpires: { type: Date },
+  pendingEmail: { type: String, default: '' },
+  
   // Profile settings
   bio: { type: String, default: 'Passionate developer mastering the MERN stack.' },
   affiliation: { type: String, default: 'Independent Academy' },

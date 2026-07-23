@@ -11,16 +11,22 @@ import { CertificateModal } from './components/CertificateModal';
 import { Login } from './components/Login';
 import { DailyChallenge } from './components/DailyChallenge';
 import { UserProfile } from './components/UserProfile';
+import { EmailVerificationGate } from './components/EmailVerificationGate';
 import { DOMAINS } from './data';
 
 const AppContent = () => {
   const [currentView, setCurrentView] = useState('home'); // 'home' | 'quiz' | 'interview' | 'architecture' | 'sandbox'
   const [isCertificateOpen, setIsCertificateOpen] = useState(false);
   const [isDailyOpen, setIsDailyOpen] = useState(false);
-  const { activeDomain, setActiveDomain, user, login } = useProgress();
+  const { activeDomain, setActiveDomain, user, login, logout, token } = useProgress();
 
   if (!user) {
     return <Login onLogin={login} />;
+  }
+
+  // Gate content display if email address remains unverified
+  if (user.isVerified === false && !user.isGuest) {
+    return <EmailVerificationGate user={user} token={token} onLogout={logout} />;
   }
 
   return (
