@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import User from './models/User.js';
 import Question from './models/Question.js';
@@ -452,13 +453,31 @@ app.post('/api/users/sync', authMiddleware, async (req, res) => {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve static assets from Vite build in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../dist')));
-  
+// --------------------------------------------------
+// 🌐 SERVE REACT FRONTEND (production + Render)
+// --------------------------------------------------
+// Serve Vite's compiled dist/ folder — works when NODE_ENV=production
+// or when the dist/ folder actually exists (Render always builds it)
+const distPath = path.join(__dirname, '../dist');
+const distIndex = path.join(distPath, 'index.html');
+
+const distExists = fs.existsSync(distIndex);
+
+if (distExists) {
+  // Serve static assets (JS, CSS, images)
+  app.use(express.static(distPath));
+
+  // Any non-API route → serve React app (client-side routing)
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ message: 'API route not found.' });
+    }
+    res.sendFile(distIndex);
   });
+
+  console.log(`✅ Serving React frontend from: ${distPath}`);
+} else {
+  console.log('⚠️  dist/ not found — frontend not being served (run npm run build)');
 }
 
 // Start Server listener
