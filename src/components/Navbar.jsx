@@ -87,7 +87,7 @@ export const Navbar = ({ currentView, setCurrentView, onOpenCertificate }) => {
       </div>
 
       {/* Right Controls: Streak, Certificate, Theme, Logout */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+      <div className="navbar-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
         {/* Streak Counter */}
         <div style={{
           display: 'flex',

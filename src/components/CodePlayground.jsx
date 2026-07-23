@@ -92,7 +92,7 @@ export const CodePlayground = () => {
       </div>
 
       {/* Editor & Preview Split Panel */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', minHeight: '500px' }}>
+      <div className="playground-layout">
         {/* Code Editor Area */}
         <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: 'var(--accent-amber)', fontWeight: 700, fontSize: '0.9rem' }}>

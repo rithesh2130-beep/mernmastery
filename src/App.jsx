@@ -68,7 +68,7 @@ const AppContent = () => {
       {/* Main Workspace */}
       <main className="main-workspace">
         {currentView === 'quiz' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
+          <div className="quiz-layout">
             <Sidebar />
             <QuizEngine />
           </div>
