@@ -31,25 +31,27 @@ app.use(helmet({
 }));
 
 // CORS — restrict to known frontend origins
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : null;
 const isProd = process.env.NODE_ENV === 'production';
-
-// In production: only the exact FRONTEND_URL is allowed
-// In development: any localhost port is allowed (Vite picks ports dynamically)
-const allowedOrigins = isProd
-  ? [FRONTEND_URL]                                                                   // strict: only your domain
-  : Array.from({ length: 50 }, (_, i) => `http://localhost:${5173 + i}`);           // dev: any local port
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow server-to-server / curl / Postman (no Origin header)
     if (!origin) return callback(null, true);
 
-    const allowed = isProd
-      ? allowedOrigins.includes(origin)                 // exact match in production
-      : allowedOrigins.some(o => origin === o);         // exact match in development too
+    const allowedOrigins = [
+      'https://mernmastery.onrender.com',
+      'https://courageous-bubblegum-d7d411.netlify.app',
+      'http://localhost:5173'
+    ];
+    if (FRONTEND_URL) allowedOrigins.push(FRONTEND_URL);
+    
+    // In dev allow any localhost port
+    if (!isProd && origin.startsWith('http://localhost:')) {
+      return callback(null, true);
+    }
 
-    if (allowed) {
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.warn(`[CORS] Blocked request from origin: ${origin}`);
