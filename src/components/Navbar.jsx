@@ -123,11 +123,16 @@ export const Navbar = ({ currentView, setCurrentView, onOpenCertificate }) => {
               justifyContent: 'center',
               cursor: 'pointer',
               boxShadow: currentView === 'profile' ? '0 4px 12px rgba(217, 107, 67, 0.25)' : 'none',
-              transition: 'var(--transition)'
+              transition: 'var(--transition)',
+              overflow: 'hidden'
             }}
             title="Open Student Profile"
           >
-            {initials}
+            {user?.profilePic ? (
+              <img src={user.profilePic} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              initials
+            )}
           </button>
         </div>
       </nav>

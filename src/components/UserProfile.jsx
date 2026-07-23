@@ -13,7 +13,9 @@ import {
   User,
   Mail,
   Building,
-  Target
+  Target,
+  Image,
+  FileText
 } from 'lucide-react';
 
 export const UserProfile = ({ onNavigateView }) => {
@@ -27,6 +29,8 @@ export const UserProfile = ({ onNavigateView }) => {
   const [editGoal, setEditGoal] = useState(user?.targetGoal || 'Senior MERN Developer');
   const [editAffiliation, setEditAffiliation] = useState(user?.affiliation || 'Independent Academy');
   const [editColor, setEditColor] = useState(user?.avatarColor || '#D96B43'); // Default Terracotta
+  const [editBio, setEditBio] = useState(user?.bio || 'Passionate developer mastering the MERN stack with the 100-Year Master.');
+  const [profilePic, setProfilePic] = useState(user?.profilePic || '');
   const [successMsg, setSuccessMsg] = useState('');
 
   const completedLevelsCount = getTotalCompletedLevels();
@@ -60,7 +64,7 @@ export const UserProfile = ({ onNavigateView }) => {
   // Calculate badges
   const achievements = [
     { id: 'start', name: 'First Steps', desc: 'Complete Level 1 in any subject', unlocked: completedLevelsCount >= 1, icon: '🌱' },
-    { id: 'frontend', name: 'UI Aspirant', desc: 'Complete 5 levels in HTML or CSS', unlocked: (domainStats[0].completed >= 5 || domainStats[1].completed >= 5), icon: '🎨' },
+    { id: 'frontend', name: 'UI Apprentice', desc: 'Complete 5 levels in HTML or CSS', unlocked: (domainStats[0].completed >= 5 || domainStats[1].completed >= 5), icon: '🎨' },
     { id: 'js_oracle', name: 'JS Oracle', desc: 'Complete Level 5 in JavaScript', unlocked: domainStats[2].completed >= 5, icon: '⚡' },
     { id: 'mern_apprentice', name: 'MERN Apprentice', desc: 'Master 10 total levels', unlocked: completedLevelsCount >= 10, icon: '🧱' },
     { id: 'fullstack_sage', name: 'Full-Stack Sage', desc: 'Master 35 total levels', unlocked: completedLevelsCount >= 35, icon: '🔮' },
@@ -81,6 +85,26 @@ export const UserProfile = ({ onNavigateView }) => {
     });
   });
 
+  // Convert uploaded image file to Base64 data url
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Image file size should be less than 2MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePic(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setProfilePic('');
+  };
+
   const handleSaveProfile = (e) => {
     e.preventDefault();
     setSuccessMsg('');
@@ -95,7 +119,9 @@ export const UserProfile = ({ onNavigateView }) => {
       email: editEmail,
       targetGoal: editGoal,
       affiliation: editAffiliation,
-      avatarColor: editColor
+      avatarColor: editColor,
+      bio: editBio,
+      profilePic: profilePic
     });
 
     setSuccessMsg('Profile updated successfully!');
@@ -142,10 +168,12 @@ export const UserProfile = ({ onNavigateView }) => {
         {!isEditing ? (
           /* Profile Summary Mode */
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+              
+              {/* Photo Avatar */}
               <div style={{
-                width: '82px',
-                height: '82px',
+                width: '90px',
+                height: '90px',
                 borderRadius: '24px',
                 background: editColor,
                 color: '#FFFFFF',
@@ -155,10 +183,17 @@ export const UserProfile = ({ onNavigateView }) => {
                 fontSize: '2.2rem',
                 fontWeight: 800,
                 boxShadow: `0 8px 24px ${editColor}33`,
-                border: '2.5px solid #FFFFFF'
+                border: '2.5px solid #FFFFFF',
+                overflow: 'hidden',
+                flexShrink: 0
               }}>
-                {initials}
+                {profilePic ? (
+                  <img src={profilePic} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  initials
+                )}
               </div>
+
               <div>
                 <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                   {user?.name}
@@ -180,7 +215,22 @@ export const UserProfile = ({ onNavigateView }) => {
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '0.2rem' }}>
                   <strong>Goal:</strong> {editGoal} • <strong>Org:</strong> {editAffiliation}
                 </p>
-                <p style={{ color: 'var(--text-subtle)', fontSize: '0.85rem', marginTop: '0.1rem' }}>
+                
+                {/* Bio text block */}
+                <p style={{
+                  fontSize: '0.88rem',
+                  color: 'var(--text-muted)',
+                  marginTop: '0.5rem',
+                  fontStyle: 'italic',
+                  borderLeft: `3px solid ${editColor}`,
+                  paddingLeft: '0.75rem',
+                  maxWidth: '500px',
+                  lineHeight: 1.45
+                }}>
+                  {editBio}
+                </p>
+
+                <p style={{ color: 'var(--text-subtle)', fontSize: '0.82rem', marginTop: '0.65rem' }}>
                   {user?.email} • MERN Rank: <span style={{ color: 'var(--accent-terracotta)', fontWeight: 700 }}>
                     {completedLevelsCount >= 35 ? 'Fullstack Architect Sage' : completedLevelsCount >= 10 ? 'Senior MERN Scholar' : 'Web Dev Apprentice'}
                   </span>
@@ -219,6 +269,57 @@ export const UserProfile = ({ onNavigateView }) => {
               >
                 <X size={20} />
               </button>
+            </div>
+
+            {/* Profile Pic Upload Row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem', background: 'var(--bg-tertiary)', padding: '1rem 1.5rem', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '16px',
+                background: editColor,
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.8rem',
+                fontWeight: 800,
+                overflow: 'hidden',
+                border: '2px solid #FFFFFF'
+              }}>
+                {profilePic ? (
+                  <img src={profilePic} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  initials
+                )}
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)', display: 'block', marginBottom: '0.35rem' }}>
+                  Student Profile Photo
+                </label>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    style={{ display: 'none' }}
+                    id="profile-pic-upload"
+                  />
+                  <label htmlFor="profile-pic-upload" className="btn-secondary" style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                    <Image size={15} /> Upload Photo
+                  </label>
+
+                  {profilePic && (
+                    <button type="button" onClick={handleRemovePhoto} style={{ background: 'transparent', border: 'none', color: 'var(--accent-rose)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
+                      Remove Photo
+                    </button>
+                  )}
+                </div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', display: 'block', marginTop: '0.25rem' }}>
+                  Max size: 2MB. Supports PNG, JPG, or GIF.
+                </span>
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
@@ -326,10 +427,38 @@ export const UserProfile = ({ onNavigateView }) => {
               </div>
             </div>
 
+            {/* Bio textarea input field */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '1.25rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)' }}>
+                Professional Biography / Target Goal Description
+              </label>
+              <div style={{ position: 'relative' }}>
+                <FileText size={16} style={{ position: 'absolute', left: '1rem', top: '1rem', color: 'var(--text-subtle)' }} />
+                <textarea 
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  placeholder="Tell us about your learning objectives..."
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    background: 'var(--bg-tertiary)',
+                    border: '1.5px solid var(--border-color)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '0.7rem 1rem 0.7rem 2.5rem',
+                    color: 'var(--text-main)',
+                    fontSize: '0.92rem',
+                    outline: 'none',
+                    fontFamily: 'var(--font-body)',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+            </div>
+
             {/* Avatar Color Accents Selection */}
             <div style={{ marginTop: '1.5rem' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>
-                Profile Avatar Accent Color
+                Fallback Profile Initials Avatar Color
               </label>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 {avatarColorThemes.map(theme => (
