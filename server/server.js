@@ -113,15 +113,10 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ message: 'All inputs are required.' });
     }
 
-    // Check if user already exists (by email or name)
+    // Check if user already exists
     const existingEmail = await User.findOne({ email });
     if (existingEmail) {
       return res.status(400).json({ message: 'User with this email already exists.' });
-    }
-
-    const existingName = await User.findOne({ name });
-    if (existingName) {
-      return res.status(400).json({ message: 'This username is already taken. Please choose another one.' });
     }
 
     // Password strength check (regex validation)
@@ -132,24 +127,16 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    // Generate secure email verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-
     // Create new user (hook inside model hashes password automatically)
+    // isVerified is now true by default
     const newUser = new User({
       name,
       email,
       passwordHash: password,
-      isVerified: false,
-      emailVerificationToken: verificationToken,
-      emailVerificationExpires: verificationExpires
+      isVerified: true
     });
 
     await newUser.save();
-
-    // Send verification email in development / production
-    await sendVerificationEmail(newUser.email, verificationToken);
 
     // Sign JWT token
     const token = jwt.sign(
