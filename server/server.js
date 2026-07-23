@@ -63,6 +63,9 @@ app.use(cors({
 
 
 // Rate Limiting — protect auth endpoints from brute-force
+// Render uses a reverse proxy, so we must tell Express to trust it for rate-limiting
+app.set('trust proxy', 1);
+
 const isDev = process.env.NODE_ENV !== 'production';
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,  // 15-minute window

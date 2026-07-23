@@ -43,16 +43,23 @@ export const sendVerificationEmail = async (toEmail, token) => {
   // Use Resend in Production
   if (resend) {
     try {
-      const data = await resend.emails.send({
+      const response = await resend.emails.send({
         from: 'onboarding@resend.dev', // Default testing address for Resend free tier
         to: toEmail,
         subject: 'Verify Your MERN Academy Email Address',
         html: htmlContent
       });
-      console.log(`[RESEND] Verification email dispatched to ${toEmail}. ID: ${data.id}`);
+      
+      if (response.error) {
+        console.error("[RESEND API Error]", response.error);
+        return false;
+      }
+      
+      console.log(`[RESEND] Verification email dispatched to ${toEmail}. ID: ${response.data?.id}`);
       return true;
     } catch (error) {
-      console.error("[RESEND Error] Failed to send email via Resend:", error);
+      console.error("[RESEND Exception] Failed to send email via Resend SDK:", error);
+      return false;
     }
   }
 
