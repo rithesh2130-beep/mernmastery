@@ -16,6 +16,14 @@ export const QuestionCard = ({
 
   const optionLabels = ['A', 'B', 'C', 'D'];
 
+  // Shuffle options once per question load, keeping track of the original index
+  // so we can still pass the correct original index back to the parent component.
+  const shuffledItems = React.useMemo(() => {
+    const items = questionData.options.map((opt, i) => ({ opt, originalIndex: i }));
+    // Simple Fisher-Yates or random sort
+    return items.sort(() => Math.random() - 0.5);
+  }, [questionData]);
+
   return (
     <div className="glass-card" style={{ padding: '2rem' }}>
       {/* Header Info */}
@@ -66,29 +74,29 @@ export const QuestionCard = ({
 
       {/* Options List */}
       <div className="options-grid">
-        {questionData.options.map((opt, idx) => {
+        {shuffledItems.map((item, displayIdx) => {
           let btnClass = "";
           if (isSubmitted) {
-            if (idx === questionData.correctAnswer) {
+            if (item.originalIndex === questionData.correctAnswer) {
               btnClass = "correct";
-            } else if (idx === selectedAnswer) {
+            } else if (item.originalIndex === selectedAnswer) {
               btnClass = "incorrect";
             }
           }
 
           return (
             <button
-              key={idx}
+              key={item.originalIndex}
               className={`option-btn ${btnClass}`}
               disabled={isSubmitted}
-              onClick={() => onSelectAnswer(idx)}
+              onClick={() => onSelectAnswer(item.originalIndex)}
               style={{
-                borderWidth: selectedAnswer === idx && !isSubmitted ? '2px' : '1px',
-                borderColor: selectedAnswer === idx && !isSubmitted ? 'var(--accent-terracotta)' : undefined
+                borderWidth: selectedAnswer === item.originalIndex && !isSubmitted ? '2px' : '1px',
+                borderColor: selectedAnswer === item.originalIndex && !isSubmitted ? 'var(--accent-terracotta)' : undefined
               }}
             >
-              <span className="option-badge">{optionLabels[idx]}</span>
-              <span style={{ flex: 1 }}>{opt}</span>
+              <span className="option-badge">{optionLabels[displayIdx]}</span>
+              <span style={{ flex: 1 }}>{item.opt}</span>
             </button>
           );
         })}
