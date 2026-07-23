@@ -506,3 +506,13 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase;
   margin-bottom: 0.5rem;
 }
+
+@media (max-width: 768px) {
+  .login-sidebar {
+    display: none !important;
+  }
+  div[style*="gridTemplateColumns: 1fr 1.1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+

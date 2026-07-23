@@ -10,6 +10,7 @@ import { CodePlayground } from './components/CodePlayground';
 import { CertificateModal } from './components/CertificateModal';
 import { Login } from './components/Login';
 import { DailyChallenge } from './components/DailyChallenge';
+import { UserProfile } from './components/UserProfile';
 import { DOMAINS } from './data';
 
 const AppContent = () => {
@@ -85,6 +86,7 @@ const AppContent = () => {
             {currentView === 'interview' && <InterviewBank />}
             {currentView === 'architecture' && <ArchitectureVisualizer />}
             {currentView === 'sandbox' && <CodePlayground />}
+            {currentView === 'profile' && <UserProfile onNavigateView={(view) => setCurrentView(view)} />}
           </div>
         )}
       </main>

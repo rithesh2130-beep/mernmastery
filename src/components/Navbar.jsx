@@ -10,7 +10,8 @@ import {
   Award, 
   Moon, 
   Sun,
-  LogOut
+  LogOut,
+  User
 } from 'lucide-react';
 
 export const Navbar = ({ currentView, setCurrentView, onOpenCertificate }) => {
@@ -23,6 +24,7 @@ export const Navbar = ({ currentView, setCurrentView, onOpenCertificate }) => {
     { id: 'interview', label: 'Interview Q&A', icon: <HelpCircle size={15} /> },
     { id: 'architecture', label: 'MERN Flow', icon: <Cpu size={15} /> },
     { id: 'sandbox', label: 'Code Sandbox', icon: <Code2 size={15} /> },
+    { id: 'profile', label: 'Profile', icon: <User size={15} /> }
   ];
 
   return (

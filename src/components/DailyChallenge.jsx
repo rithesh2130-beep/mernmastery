@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { useProgress } from '../context/ProgressContext';
 import { DOMAINS } from '../data';
-import { Timer, Award, RotateCcw, AlertTriangle, ArrowRight, CheckCircle2, X } from 'lucide-react';
+import { Timer, Award, AlertTriangle, ArrowRight, CheckCircle2, X } from 'lucide-react';
 
 // Generates 5 deterministic daily questions based on current date hash
 const getDailyQuestions = () => {
@@ -45,34 +45,15 @@ export const DailyChallenge = ({ onClose }) => {
   const todayStr = new Date().toDateString();
   const alreadyDone = lastDailyCompleted === todayStr;
 
-  useEffect(() => {
-    let timer = null;
-    if (timerActive && timeLeft > 0 && !isCompleted && !alreadyDone) {
-      timer = setInterval(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && !isCompleted && !alreadyDone) {
-      handleFinish();
-    }
-    return () => clearInterval(timer);
-  }, [timeLeft, timerActive, isCompleted, alreadyDone]);
-
-  const handleSelectOption = (optionIndex) => {
-    if (submittedAnswers[currentIndex] !== undefined || alreadyDone) return;
-    
-    setUserAnswers(prev => ({ ...prev, [currentIndex]: optionIndex }));
-    setSubmittedAnswers(prev => ({ ...prev, [currentIndex]: optionIndex }));
-  };
-
-  const calculateScore = () => {
+  const calculateScore = useCallback(() => {
     let score = 0;
     questions.forEach((q, idx) => {
       if (userAnswers[idx] === q.correctAnswer) score++;
     });
     return score;
-  };
+  }, [questions, userAnswers]);
 
-  const handleFinish = () => {
+  const handleFinish = useCallback(() => {
     setIsCompleted(true);
     setTimerActive(false);
     const score = calculateScore();
@@ -85,6 +66,25 @@ export const DailyChallenge = ({ onClose }) => {
         origin: { y: 0.6 }
       });
     }
+  }, [calculateScore, completeDailyChallenge]);
+
+  useEffect(() => {
+    let timer = null;
+    if (timerActive && timeLeft > 0 && !isCompleted && !alreadyDone) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && !isCompleted && !alreadyDone) {
+      handleFinish();
+    }
+    return () => clearInterval(timer);
+  }, [timeLeft, timerActive, isCompleted, alreadyDone, handleFinish]);
+
+  const handleSelectOption = (optionIndex) => {
+    if (submittedAnswers[currentIndex] !== undefined || alreadyDone) return;
+    
+    setUserAnswers(prev => ({ ...prev, [currentIndex]: optionIndex }));
+    setSubmittedAnswers(prev => ({ ...prev, [currentIndex]: optionIndex }));
   };
 
   const currentQ = questions[currentIndex];
