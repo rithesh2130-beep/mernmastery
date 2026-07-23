@@ -4,6 +4,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import User from './models/User.js';
 import Question from './models/Question.js';
 import Interview from './models/Interview.js';
@@ -378,6 +380,18 @@ app.post('/api/users/sync', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Sync operations failed.' });
   }
 });
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static assets from Vite build in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../dist')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
+}
 
 // Start Server listener
 app.listen(PORT, () => {
