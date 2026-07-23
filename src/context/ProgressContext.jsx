@@ -33,6 +33,14 @@ export const ProgressProvider = ({ children }) => {
     localStorage.removeItem('mern_user');
   };
 
+  const updateUserProfile = (updatedData) => {
+    setUser(prev => {
+      const nextUser = { ...prev, ...updatedData };
+      localStorage.setItem('mern_user', JSON.stringify(nextUser));
+      return nextUser;
+    });
+  };
+
   // User Scores & Completed Levels
   // Structure: { [domain]: { level1: { score: 9, completed: true }, ... } }
   const [progress, setProgress] = useState(() => {
@@ -142,6 +150,7 @@ export const ProgressProvider = ({ children }) => {
       user,
       login,
       logout,
+      updateUserProfile,
       theme,
       toggleTheme,
       activeDomain,

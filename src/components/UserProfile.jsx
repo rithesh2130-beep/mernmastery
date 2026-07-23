@@ -7,15 +7,38 @@ import {
   Bookmark, 
   LogOut, 
   ChevronRight, 
-  X 
+  X,
+  Edit3,
+  Check,
+  User,
+  Mail,
+  Building,
+  Target
 } from 'lucide-react';
 
 export const UserProfile = ({ onNavigateView }) => {
-  const { user, progress, bookmarks, toggleBookmark, streak, logout, getTotalCompletedLevels } = useProgress();
+  const { user, progress, bookmarks, toggleBookmark, streak, logout, getTotalCompletedLevels, updateUserProfile } = useProgress();
   const [activeBookmarkQ, setActiveBookmarkQ] = useState(null);
+  
+  // Edit Profile Form State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(user?.name || '');
+  const [editEmail, setEditEmail] = useState(user?.email || '');
+  const [editGoal, setEditGoal] = useState(user?.targetGoal || 'Senior MERN Developer');
+  const [editAffiliation, setEditAffiliation] = useState(user?.affiliation || 'Independent Academy');
+  const [editColor, setEditColor] = useState(user?.avatarColor || '#D96B43'); // Default Terracotta
+  const [successMsg, setSuccessMsg] = useState('');
 
   const completedLevelsCount = getTotalCompletedLevels();
   const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'S';
+
+  const avatarColorThemes = [
+    { name: 'Terracotta', color: '#D96B43' },
+    { name: 'Emerald', color: '#059669' },
+    { name: 'Indigo', color: '#4F46E5' },
+    { name: 'Amber', color: '#D97706' },
+    { name: 'Teal', color: '#0D9488' }
+  ];
 
   // Calculate stats per domain
   const domainStats = Object.keys(DOMAINS).map(key => {
@@ -58,6 +81,28 @@ export const UserProfile = ({ onNavigateView }) => {
     });
   });
 
+  const handleSaveProfile = (e) => {
+    e.preventDefault();
+    setSuccessMsg('');
+
+    if (!editName || !editEmail) {
+      alert("Name and Email are required fields.");
+      return;
+    }
+
+    updateUserProfile({
+      name: editName,
+      email: editEmail,
+      targetGoal: editGoal,
+      affiliation: editAffiliation,
+      avatarColor: editColor
+    });
+
+    setSuccessMsg('Profile updated successfully!');
+    setIsEditing(false);
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
   const handleResetProgress = () => {
     if (window.confirm("Are you sure you want to reset all your learning progress? This action is permanent!")) {
       localStorage.removeItem('mern_progress');
@@ -70,57 +115,254 @@ export const UserProfile = ({ onNavigateView }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', width: '100%' }}>
-      {/* Profile Overview Card */}
-      <div className="glass-card" style={{ padding: '2.5rem', background: 'linear-gradient(135deg, #FFF4EE, #FFFFFF 60%, #EEF2FF)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
-          
-          {/* Avatar and Name */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <div style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '24px',
-              background: 'var(--accent-terracotta)',
-              color: '#FFFFFF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2.2rem',
-              fontWeight: 800,
-              boxShadow: '0 8px 24px rgba(217, 107, 67, 0.25)'
-            }}>
-              {initials}
-            </div>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                {user?.name}
-              </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                {user?.email} • <span style={{ color: 'var(--accent-terracotta)', fontWeight: 700 }}>
-                  {completedLevelsCount >= 35 ? 'Fullstack Architect Sage' : completedLevelsCount >= 10 ? 'Senior MERN Scholar' : 'Web Dev Apprentice'}
-                </span>
-              </p>
-            </div>
-          </div>
+      
+      {/* Toast Notification Banner */}
+      {successMsg && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          background: 'var(--accent-emerald)',
+          color: '#FFFFFF',
+          padding: '1rem 1.5rem',
+          borderRadius: 'var(--radius-sm)',
+          boxShadow: '0 10px 25px rgba(5, 150, 105, 0.25)',
+          zIndex: 999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          fontWeight: 700
+        }}>
+          <Check size={18} /> {successMsg}
+        </div>
+      )}
 
-          {/* Quick Info Badges */}
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <div style={{ background: '#FFFFFF', padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-sm)', border: '1fr solid var(--border-color)', textAlign: 'center', minWidth: '120px' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700 }}>Streak</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
-                <Flame size={20} fill="var(--accent-amber)" /> {streak} Days
+      {/* Profile Overview / Card Header */}
+      <div className="glass-card" style={{ padding: '2.5rem', background: 'linear-gradient(135deg, #FFF4EE, #FFFFFF 60%, #EEF2FF)' }}>
+        {!isEditing ? (
+          /* Profile Summary Mode */
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+              <div style={{
+                width: '82px',
+                height: '82px',
+                borderRadius: '24px',
+                background: editColor,
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2.2rem',
+                fontWeight: 800,
+                boxShadow: `0 8px 24px ${editColor}33`,
+                border: '2.5px solid #FFFFFF'
+              }}>
+                {initials}
+              </div>
+              <div>
+                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  {user?.name}
+                  <button 
+                    onClick={() => setIsEditing(true)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--text-subtle)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                    title="Edit Profile Settings"
+                  >
+                    <Edit3 size={18} />
+                  </button>
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '0.2rem' }}>
+                  <strong>Goal:</strong> {editGoal} • <strong>Org:</strong> {editAffiliation}
+                </p>
+                <p style={{ color: 'var(--text-subtle)', fontSize: '0.85rem', marginTop: '0.1rem' }}>
+                  {user?.email} • MERN Rank: <span style={{ color: 'var(--accent-terracotta)', fontWeight: 700 }}>
+                    {completedLevelsCount >= 35 ? 'Fullstack Architect Sage' : completedLevelsCount >= 10 ? 'Senior MERN Scholar' : 'Web Dev Apprentice'}
+                  </span>
+                </p>
               </div>
             </div>
 
-            <button 
-              className="btn-primary" 
-              onClick={() => onNavigateView('quiz')}
-              style={{ padding: '0.75rem 1.5rem', alignSelf: 'center' }}
-            >
-              Resume Learning <ChevronRight size={18} />
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <div style={{ background: '#FFFFFF', padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-sm)', border: '1fr solid var(--border-color)', textAlign: 'center', minWidth: '120px' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700 }}>Streak</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
+                  <Flame size={20} fill="var(--accent-amber)" /> {streak} Days
+                </div>
+              </div>
+
+              <button 
+                className="btn-primary" 
+                onClick={() => onNavigateView('quiz')}
+                style={{ padding: '0.75rem 1.5rem' }}
+              >
+                Resume Learning <ChevronRight size={18} />
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          /* Profile Edit Settings Form */
+          <form onSubmit={handleSaveProfile}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', fontWeight: 800 }}>
+                ⚙️ Professional Profile Settings
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setIsEditing(false)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+              
+              {/* Left Column Fields */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)' }}>
+                    Full Name (printed on certificate)
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <User size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
+                    <input 
+                      type="text" 
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      style={{
+                        width: '100%',
+                        background: 'var(--bg-tertiary)',
+                        border: '1.5px solid var(--border-color)',
+                        borderRadius: 'var(--radius-sm)',
+                        padding: '0.7rem 1rem 0.7rem 2.5rem',
+                        color: 'var(--text-main)',
+                        fontSize: '0.92rem',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)' }}>
+                    Email Address
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Mail size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
+                    <input 
+                      type="email" 
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      style={{
+                        width: '100%',
+                        background: 'var(--bg-tertiary)',
+                        border: '1.5px solid var(--border-color)',
+                        borderRadius: 'var(--radius-sm)',
+                        padding: '0.7rem 1rem 0.7rem 2.5rem',
+                        color: 'var(--text-main)',
+                        fontSize: '0.92rem',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column Fields */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)' }}>
+                    Target Career Goal
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Target size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
+                    <input 
+                      type="text" 
+                      value={editGoal}
+                      onChange={(e) => setEditGoal(e.target.value)}
+                      style={{
+                        width: '100%',
+                        background: 'var(--bg-tertiary)',
+                        border: '1.5px solid var(--border-color)',
+                        borderRadius: 'var(--radius-sm)',
+                        padding: '0.7rem 1rem 0.7rem 2.5rem',
+                        color: 'var(--text-main)',
+                        fontSize: '0.92rem',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)' }}>
+                    Company / School Affiliation
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Building size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
+                    <input 
+                      type="text" 
+                      value={editAffiliation}
+                      onChange={(e) => setEditAffiliation(e.target.value)}
+                      style={{
+                        width: '100%',
+                        background: 'var(--bg-tertiary)',
+                        border: '1.5px solid var(--border-color)',
+                        borderRadius: 'var(--radius-sm)',
+                        padding: '0.7rem 1rem 0.7rem 2.5rem',
+                        color: 'var(--text-main)',
+                        fontSize: '0.92rem',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Avatar Color Accents Selection */}
+            <div style={{ marginTop: '1.5rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>
+                Profile Avatar Accent Color
+              </label>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                {avatarColorThemes.map(theme => (
+                  <button
+                    key={theme.color}
+                    type="button"
+                    onClick={() => setEditColor(theme.color)}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: theme.color,
+                      border: editColor === theme.color ? '3px solid var(--text-main)' : '1px solid var(--border-color)',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                    }}
+                    title={theme.name}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem' }}>
+              <button type="button" className="btn-secondary" onClick={() => setIsEditing(false)}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary">
+                Save Profile Changes <Check size={16} />
+              </button>
+            </div>
+          </form>
+        )}
       </div>
 
       {/* Grid: Achievements & Progress Bars */}
