@@ -30,62 +30,63 @@ export const Navbar = ({ currentView, setCurrentView, onOpenCertificate }) => {
   return (
     <nav className="navbar">
       {/* Brand Logo & Persona */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-        <a href="#home" className="brand-title" onClick={() => setCurrentView('home')}>
-          <div style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '10px',
-            background: 'var(--accent-terracotta)',
-            color: '#FFFFFF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.3rem'
-          }}>
-            🎓
-          </div>
-          <div>
-            <span>MERN Academy</span>
-            <span className="brand-badge" style={{ marginLeft: '0.5rem' }}>100-Yr Master</span>
-          </div>
-        </a>
-
-        {/* View Switcher Tabs */}
+      <a href="#home" className="brand-title" onClick={() => setCurrentView('home')}>
         <div style={{
+          width: '38px',
+          height: '38px',
+          borderRadius: '10px',
+          background: 'var(--accent-terracotta)',
+          color: '#FFFFFF',
           display: 'flex',
-          gap: '0.3rem',
-          background: 'var(--bg-tertiary)',
-          padding: '0.25rem',
-          borderRadius: 'var(--radius-full)',
-          border: '1px solid var(--border-color)'
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '1.3rem'
         }}>
-          {navItems.map(item => {
-            const isActive = currentView === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setCurrentView(item.id)}
-                style={{
-                  borderRadius: 'var(--radius-full)',
-                  padding: '0.4rem 0.9rem',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  background: isActive ? 'var(--accent-terracotta)' : 'transparent',
-                  color: isActive ? '#FFFFFF' : 'var(--text-muted)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  transition: 'var(--transition)'
-                }}
-              >
-                {item.icon} {item.label}
-              </button>
-            );
-          })}
+          🎓
         </div>
+        <div>
+          <span>MERN Academy</span>
+          <span className="brand-badge" style={{ marginLeft: '0.5rem' }}>100-Yr Master</span>
+        </div>
+      </a>
+
+      {/* View Switcher Tabs */}
+      <div style={{
+        display: 'flex',
+        gap: '0.3rem',
+        background: 'var(--bg-tertiary)',
+        padding: '0.25rem',
+        borderRadius: 'var(--radius-full)',
+        border: '1px solid var(--border-color)',
+        overflowX: 'auto',
+        maxWidth: '100%'
+      }}>
+        {navItems.map(item => {
+          const isActive = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setCurrentView(item.id)}
+              style={{
+                borderRadius: 'var(--radius-full)',
+                padding: '0.4rem 0.9rem',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                background: isActive ? 'var(--accent-terracotta)' : 'transparent',
+                color: isActive ? '#FFFFFF' : 'var(--text-muted)',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                transition: 'var(--transition)',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {item.icon} {item.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Right Controls: Streak, Certificate, Theme, Logout */}
