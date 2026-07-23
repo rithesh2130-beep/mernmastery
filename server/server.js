@@ -79,6 +79,22 @@ mongoose.connect(mongoUri)
   .catch(err => console.error('MongoDB database connection error:', err));
 
 // --------------------------------------------------
+// ❤️ HEALTH CHECK
+// --------------------------------------------------
+
+// GET /api/health — used by Render, monitoring tools, and devs to verify the server is up
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'MERN Mastery Academy API is running',
+    environment: process.env.NODE_ENV || 'development',
+    uptime: `${Math.floor(process.uptime())}s`,
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// --------------------------------------------------
 // 🔑 AUTHENTICATION ROUTES
 // --------------------------------------------------
 
