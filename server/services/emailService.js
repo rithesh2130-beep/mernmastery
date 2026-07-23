@@ -1,12 +1,22 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Initialize Resend using your environment variable
-// (Falls back to null if missing, so development mode still works with console logs)
-const resendApiKey = process.env.RESEND_API_KEY;
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
+// Create SMTP Transporter (optional config, defaults to console log if missing)
+let transporter = null;
+
+if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+}
 
 export const sendVerificationEmail = async (toEmail, token) => {
   // In production, APP_URL is the public backend URL (e.g. https://api.mernacademy.com)
@@ -40,32 +50,24 @@ export const sendVerificationEmail = async (toEmail, token) => {
     </div>
   `;
 
-  // Use Resend in Production
-  if (resend) {
+  if (transporter) {
     try {
-      const response = await resend.emails.send({
-        from: 'onboarding@resend.dev', // Default testing address for Resend free tier
+      const info = await transporter.sendMail({
+        from: `"MERN Academy" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
         to: toEmail,
         subject: 'Verify Your MERN Academy Email Address',
         html: htmlContent
       });
-      
-      if (response.error) {
-        console.error("[RESEND API Error]", response.error);
-        return false;
-      }
-      
-      console.log(`[RESEND] Verification email dispatched to ${toEmail}. ID: ${response.data?.id}`);
+      console.log(`[SMTP] Verification email dispatched to ${toEmail}. ID: ${info.messageId}`);
       return true;
     } catch (error) {
-      console.error("[RESEND Exception] Failed to send email via Resend SDK:", error);
-      return false;
+      console.error("[SMTP Error] Failed to send email via SMTP transporter. Falling back to console log:", error);
     }
   }
 
-  // Developer/Local Fallback Console logs (if RESEND_API_KEY is missing)
+  // Developer/Local Fallback Console logs
   console.log("==========================================================================");
-  console.log("📨 [DEVELOPMENT EMAIL FALLBACK - NO API KEY FOUND]");
+  console.log("📨 [DEVELOPMENT EMAIL FALLBACK]");
   console.log(`To: ${toEmail}`);
   console.log("Verify using this URL:");
   console.log(`👉 ${verificationLink}`);
