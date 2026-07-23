@@ -19,7 +19,10 @@ if (process.env.SMTP_HOST && process.env.SMTP_USER) {
 }
 
 export const sendVerificationEmail = async (toEmail, token) => {
-  const verificationLink = `http://localhost:5000/api/auth/verify-email?token=${token}`;
+  // In production, APP_URL is the public backend URL (e.g. https://api.mernacademy.com)
+  // In development, falls back to localhost:5000
+  const backendUrl = process.env.APP_URL || 'http://localhost:5000';
+  const verificationLink = `${backendUrl}/api/auth/verify-email?token=${token}`;
 
   const htmlContent = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; borderRadius: 8px;">

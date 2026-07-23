@@ -27,10 +27,10 @@ const seedDatabase = async () => {
       const dom = DOMAINS[domKey];
       console.log(`Processing domain: ${dom.name} (${domKey})`);
 
-      // Prepare MCQs
+      // Prepare MCQs — prefix id with domain to avoid cross-domain collisions
       dom.questions.forEach(q => {
         seededQuestions.push({
-          id: q.id,
+          id: `${domKey}-${q.id}`,
           domain: domKey,
           level: q.level,
           question: q.question,

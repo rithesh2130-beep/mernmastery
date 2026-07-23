@@ -1,6 +1,8 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -18,8 +20,57 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/mernmastery';
 
-// Middleware
-app.use(cors());
+// --------------------------------------------------
+// 🛡️ SECURITY MIDDLEWARE
+// --------------------------------------------------
+
+// Helmet — sets secure HTTP response headers
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' } // allow images across origins
+}));
+
+// CORS — restrict to known frontend origins
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const isProd = process.env.NODE_ENV === 'production';
+
+// In production: only the exact FRONTEND_URL is allowed
+// In development: any localhost port is allowed (Vite picks ports dynamically)
+const allowedOrigins = isProd
+  ? [FRONTEND_URL]                                                                   // strict: only your domain
+  : Array.from({ length: 50 }, (_, i) => `http://localhost:${5173 + i}`);           // dev: any local port
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow server-to-server / curl / Postman (no Origin header)
+    if (!origin) return callback(null, true);
+
+    const allowed = isProd
+      ? allowedOrigins.includes(origin)                 // exact match in production
+      : allowedOrigins.some(o => origin === o);         // exact match in development too
+
+    if (allowed) {
+      callback(null, true);
+    } else {
+      console.warn(`[CORS] Blocked request from origin: ${origin}`);
+      callback(new Error(`CORS policy blocked: ${origin}`));
+    }
+  },
+  credentials: true
+}));
+
+
+// Rate Limiting — protect auth endpoints from brute-force
+const isDev = process.env.NODE_ENV !== 'production';
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,  // 15-minute window
+  max: isDev ? 200 : 20,      // 200 in dev (allows test suites), 20 in production
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many login attempts. Please try again in 15 minutes.' },
+  skip: () => isDev && process.env.DISABLE_RATE_LIMIT === 'true'
+});
+
+app.use('/api/auth/', authLimiter);
 app.use(express.json({ limit: '10mb' })); // support large base64 image data upload
 
 // Connect to MongoDB
@@ -184,8 +235,9 @@ app.get('/api/auth/verify-email', async (req, res) => {
 
     await user.save();
 
-    // Redirect to frontend app workspace with verification success query
-    res.redirect('http://localhost:5183/?verified=true');
+    // Redirect to frontend app with verification success query
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${frontendUrl}/?verified=true`);
 
   } catch (error) {
     console.error(error);

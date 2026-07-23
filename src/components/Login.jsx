@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { LogIn, UserPlus, ArrowRight, Lock, Mail, User, Eye, EyeOff } from 'lucide-react';
 
-export const Login = ({ onLogin }) => {
+export const Login = ({ onLogin, verifiedBanner, onClearBanner }) => {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,8 +43,15 @@ export const Login = ({ onLogin }) => {
         return;
       }
 
-      // Call context login with token and user profile
-      onLogin(data.token, data.user);
+      if (isRegister) {
+        setSuccess('Account registered successfully! A verification link has been sent to your address. Please verify your email, then login below.');
+        setIsRegister(false);
+        setPassword('');
+        setError('');
+      } else {
+        // Call context login with token and user profile
+        onLogin(data.token, data.user);
+      }
 
     } catch (err) {
       console.error(err);
@@ -157,6 +165,41 @@ export const Login = ({ onLogin }) => {
                 fontWeight: 700
               }}>
                 ⚠️ {error}
+              </div>
+            )}
+
+            {verifiedBanner && (
+              <div style={{
+                background: 'rgba(5, 150, 105, 0.12)',
+                color: '#059669',
+                border: '1.5px solid rgba(5, 150, 105, 0.3)',
+                padding: '0.85rem 1.1rem',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.88rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.5rem'
+              }}>
+                <span style={{ fontSize: '1.1rem' }}>✅</span>
+                <div>
+                  <div>Email verified successfully!</div>
+                  <div style={{ fontWeight: 500, marginTop: '0.2rem', opacity: 0.85 }}>Your account is now active. Please sign in below.</div>
+                </div>
+              </div>
+            )}
+
+            {success && (
+              <div style={{
+                background: 'rgba(5, 150, 105, 0.1)',
+                color: '#059669',
+                border: '1.5px solid rgba(5, 150, 105, 0.2)',
+                padding: '0.8rem 1.1rem',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.88rem',
+                fontWeight: 700
+              }}>
+                ✓ {success}
               </div>
             )}
 

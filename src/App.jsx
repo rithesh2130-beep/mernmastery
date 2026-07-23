@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProgressProvider, useProgress } from './context/ProgressContext';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
@@ -15,18 +15,48 @@ import { EmailVerificationGate } from './components/EmailVerificationGate';
 import { DOMAINS } from './data';
 
 const AppContent = () => {
-  const [currentView, setCurrentView] = useState('home'); // 'home' | 'quiz' | 'interview' | 'architecture' | 'sandbox'
+  const [currentView, setCurrentView] = useState('home');
   const [isCertificateOpen, setIsCertificateOpen] = useState(false);
   const [isDailyOpen, setIsDailyOpen] = useState(false);
-  const { activeDomain, setActiveDomain, user, login, logout, token } = useProgress();
+  const [verifiedBanner, setVerifiedBanner] = useState(false);
+  const { activeDomain, setActiveDomain, user, login, logout, token, setUser } = useProgress();
+
+  // Handle ?verified=true redirect from email verification link
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verified') === 'true') {
+      // Clear the query param from the URL without reloading
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // If user is still logged in and unverified, update their status
+      if (user && !user.isVerified) {
+        setUser(prev => ({ ...prev, isVerified: true }));
+      }
+      // Always show the verified banner on login/gate screen
+      setVerifiedBanner(true);
+    }
+  }, []);
 
   if (!user) {
-    return <Login onLogin={login} />;
+    return (
+      <Login 
+        onLogin={login} 
+        verifiedBanner={verifiedBanner} 
+        onClearBanner={() => setVerifiedBanner(false)} 
+      />
+    );
   }
 
   // Gate content display if email address remains unverified
   if (user.isVerified === false && !user.isGuest) {
-    return <EmailVerificationGate user={user} token={token} onLogout={logout} />;
+    return (
+      <EmailVerificationGate 
+        user={user} 
+        token={token} 
+        onLogout={logout}
+        verifiedBanner={verifiedBanner}
+        onClearBanner={() => setVerifiedBanner(false)}
+      />
+    );
   }
 
   return (

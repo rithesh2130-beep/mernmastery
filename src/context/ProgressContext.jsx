@@ -66,7 +66,8 @@ export const ProgressProvider = ({ children }) => {
           affiliation: data.affiliation,
           targetGoal: data.targetGoal,
           avatarColor: data.avatarColor,
-          profilePic: data.profilePic
+          profilePic: data.profilePic,
+          isVerified: data.isVerified
         });
         setProgress(data.progress || {});
         setBookmarks(data.bookmarks || []);
@@ -224,6 +225,7 @@ export const ProgressProvider = ({ children }) => {
   return (
     <ProgressContext.Provider value={{
       user,
+      setUser,
       token,
       login,
       logout,
