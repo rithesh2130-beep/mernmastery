@@ -15,7 +15,7 @@ export const InterviewBank = () => {
   // Fetch interviews from MongoDB API with static fallback
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:5000/api/interviews?domain=${activeDomain}`)
+    fetch(`/api/interviews?domain=${activeDomain}`)
       .then(res => {
         if (!res.ok) throw new Error('Backend server is offline');
         return res.json();

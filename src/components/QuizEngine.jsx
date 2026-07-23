@@ -25,7 +25,7 @@ export const QuizEngine = () => {
   // Fetch questions from MongoDB API with static fallback
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:5000/api/questions?domain=${activeDomain}&level=${currentLevel}`)
+    fetch(`/api/questions?domain=${activeDomain}&level=${currentLevel}`)
       .then(res => {
         if (!res.ok) throw new Error('Backend server is offline');
         return res.json();

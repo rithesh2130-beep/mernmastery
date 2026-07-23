@@ -21,7 +21,7 @@ export const EmailVerificationGate = ({ user, token, onLogout }) => {
     setIsChecking(true);
     setErrorMsg('');
     try {
-      const response = await fetch('http://localhost:5000/api/users/profile', {
+      const response = await fetch('/api/users/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -51,7 +51,7 @@ export const EmailVerificationGate = ({ user, token, onLogout }) => {
     setResendStatus('sending');
     setErrorMsg('');
     try {
-      const response = await fetch('http://localhost:5000/api/auth/resend-verification', {
+      const response = await fetch('/api/auth/resend-verification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
