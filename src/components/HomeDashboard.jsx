@@ -3,8 +3,8 @@ import { useProgress } from '../context/ProgressContext';
 import { DOMAINS } from '../data';
 import { BookOpen, Award, Flame, CheckCircle, ArrowRight, HelpCircle, GraduationCap } from 'lucide-react';
 
-export const HomeDashboard = ({ onSelectDomain, onNavigateView }) => {
-  const { progress, getTotalCompletedLevels, streak } = useProgress();
+export const HomeDashboard = ({ onSelectDomain, onNavigateView, onOpenDailyChallenge }) => {
+  const { progress, getTotalCompletedLevels, streak, lastDailyCompleted } = useProgress();
   const completedLevels = getTotalCompletedLevels();
 
   return (
@@ -61,6 +61,64 @@ export const HomeDashboard = ({ onSelectDomain, onNavigateView }) => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Daily Challenge Banner Card */}
+      <div className="glass-card" style={{
+        padding: '1.5rem 2rem',
+        background: lastDailyCompleted === new Date().toDateString() 
+          ? 'var(--accent-emerald-bg)' 
+          : 'var(--accent-amber-bg)',
+        borderColor: lastDailyCompleted === new Date().toDateString() 
+          ? 'rgba(5, 150, 105, 0.3)' 
+          : 'rgba(217, 119, 6, 0.3)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '1rem',
+        borderRadius: 'var(--radius-md)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{
+            width: '46px',
+            height: '46px',
+            borderRadius: '12px',
+            background: lastDailyCompleted === new Date().toDateString() ? 'var(--accent-emerald)' : 'var(--accent-amber)',
+            color: '#FFFFFF',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.4rem',
+            fontWeight: 800
+          }}>
+            ⚡
+          </div>
+          <div>
+            <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>
+              Daily Quiz Challenge
+            </h4>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+              {lastDailyCompleted === new Date().toDateString() 
+                ? 'Excellent! You have successfully completed today\'s challenge and secured your streak.' 
+                : 'Test your knowledge with 5 mixed full-stack questions to increase your daily streak!'}
+            </p>
+          </div>
+        </div>
+
+        <button 
+          className="btn-primary"
+          onClick={onOpenDailyChallenge}
+          disabled={lastDailyCompleted === new Date().toDateString()}
+          style={{
+            background: lastDailyCompleted === new Date().toDateString() ? 'var(--accent-emerald)' : 'var(--accent-amber)',
+            boxShadow: 'none',
+            opacity: lastDailyCompleted === new Date().toDateString() ? 0.7 : 1,
+            cursor: lastDailyCompleted === new Date().toDateString() ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {lastDailyCompleted === new Date().toDateString() ? 'Completed Today! ✓' : 'Start Daily Quiz'}
+        </button>
       </div>
 
       {/* Quick Learning Stats */}

@@ -47,9 +47,28 @@ export const ProgressProvider = ({ children }) => {
   });
 
   // Streak counter & last study date
-  const [streak] = useState(() => {
+  const [streak, setStreak] = useState(() => {
     return parseInt(localStorage.getItem('mern_streak') || '1', 10);
   });
+
+  // Last Daily Challenge Completion Date
+  const [lastDailyCompleted, setLastDailyCompleted] = useState(() => {
+    return localStorage.getItem('mern_last_daily') || '';
+  });
+
+  // Complete Daily Challenge handler
+  const completeDailyChallenge = () => {
+    const todayStr = new Date().toDateString();
+    if (lastDailyCompleted !== todayStr) {
+      setLastDailyCompleted(todayStr);
+      localStorage.setItem('mern_last_daily', todayStr);
+      setStreak(prev => {
+        const nextStreak = prev + 1;
+        localStorage.setItem('mern_streak', nextStreak.toString());
+        return nextStreak;
+      });
+    }
+  };
 
   // Save to LocalStorage
   useEffect(() => {
@@ -135,7 +154,9 @@ export const ProgressProvider = ({ children }) => {
       bookmarks,
       toggleBookmark,
       streak,
-      getTotalCompletedLevels
+      getTotalCompletedLevels,
+      lastDailyCompleted,
+      completeDailyChallenge
     }}>
       {children}
     </ProgressContext.Provider>

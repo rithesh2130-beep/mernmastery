@@ -8,13 +8,14 @@ import { InterviewBank } from './components/InterviewBank';
 import { ArchitectureVisualizer } from './components/ArchitectureVisualizer';
 import { CodePlayground } from './components/CodePlayground';
 import { CertificateModal } from './components/CertificateModal';
-import { DOMAINS } from './data';
-
 import { Login } from './components/Login';
+import { DailyChallenge } from './components/DailyChallenge';
+import { DOMAINS } from './data';
 
 const AppContent = () => {
   const [currentView, setCurrentView] = useState('home'); // 'home' | 'quiz' | 'interview' | 'architecture' | 'sandbox'
   const [isCertificateOpen, setIsCertificateOpen] = useState(false);
+  const [isDailyOpen, setIsDailyOpen] = useState(false);
   const { activeDomain, setActiveDomain, user, login } = useProgress();
 
   if (!user) {
@@ -78,6 +79,7 @@ const AppContent = () => {
               <HomeDashboard 
                 onSelectDomain={(domKey) => setActiveDomain(domKey)} 
                 onNavigateView={(view) => setCurrentView(view)} 
+                onOpenDailyChallenge={() => setIsDailyOpen(true)}
               />
             )}
             {currentView === 'interview' && <InterviewBank />}
@@ -90,6 +92,11 @@ const AppContent = () => {
       {/* Certificate Modal */}
       {isCertificateOpen && (
         <CertificateModal onClose={() => setIsCertificateOpen(false)} />
+      )}
+
+      {/* Daily Challenge Modal */}
+      {isDailyOpen && (
+        <DailyChallenge onClose={() => setIsDailyOpen(false)} />
       )}
     </div>
   );
